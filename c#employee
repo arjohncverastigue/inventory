@@ -1,0 +1,107 @@
+using System;
+using System.IO;
+
+namespace EmployeeSalarySystem
+{
+    class Program
+    {
+        static void Main()
+        {
+            string employeeFile = "employees.txt";
+            string salaryFile = "salary.txt";
+
+            // Create sample employee file if not existing
+            if (!File.Exists(employeeFile))
+            {
+                File.WriteAllText(employeeFile,
+                    "1001,Anna,Lopez,Manager,35000\n" +
+                    "1002,Mark,DelaCruz,Programmer,28000\n" +
+                    "1003,Lisa,Reyes,Accountant,30000\n");
+                Console.WriteLine($"Created sample {employeeFile} file.\n");
+            }
+
+            Console.WriteLine("===== EMPLOYEE SALARY MANAGEMENT SYSTEM =====\n");
+
+            Console.Write("Enter Employee Number: ");
+            string empNumber = Console.ReadLine().Trim();
+
+            // Read all employee lines
+            string[] employees = File.ReadAllLines(employeeFile);
+            string record = null;
+
+            // Manually find the matching employee record
+            foreach (string line in employees)
+            {
+                if (line.StartsWith(empNumber + ","))
+                {
+                    record = line;
+                    break; // stop after finding the first match
+                }
+            }
+
+            // If record found
+            if (record != null)
+            {
+                string[] parts = record.Split(',');
+                string empNo = parts[0];
+                string firstName = parts[1];
+                string lastName = parts[2];
+                string position = parts[3];
+                double basicSalary = Convert.ToDouble(parts[4]);
+
+                Console.WriteLine("\nEmployee Found!");
+                Console.WriteLine("Name: " + firstName + " " + lastName);
+                Console.WriteLine("Position: " + position);
+                Console.WriteLine("Basic Salary: " + basicSalary.ToString("F2"));
+
+                // Input overtime info
+                double overtimeHours = GetValidNumber("Enter Overtime Hours Worked: ");
+                double ratePerHour = GetValidNumber("Enter Rate per Hour: ");
+
+                // Salary computation
+                double overtimePay = overtimeHours * ratePerHour;
+                double grossSalary = basicSalary + overtimePay;
+                double tax = grossSalary * 0.10;
+                double netSalary = grossSalary - tax;
+
+                // Display results
+                Console.WriteLine("\nOvertime Pay: " + overtimePay.ToString("F2"));
+                Console.WriteLine("Gross Salary: " + grossSalary.ToString("F2"));
+                Console.WriteLine("Tax (10%): " + tax.ToString("F2"));
+                Console.WriteLine("Net Salary: " + netSalary.ToString("F2"));
+
+                // Save to salary.txt
+                string salaryLine = empNo + "," + firstName + " " + lastName + "," + position + "," +
+                                    basicSalary.ToString("F2") + "," + overtimePay.ToString("F2") + "," +
+                                    grossSalary.ToString("F2") + "," + tax.ToString("F2") + "," + netSalary.ToString("F2");
+                File.AppendAllText(salaryFile, salaryLine + Environment.NewLine);
+
+                Console.WriteLine("\nSalary details saved to 'salary.txt'");
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("\nEmployee not found.");
+                Console.ResetColor();
+            }
+
+            Console.WriteLine("\nPress any key to exit...");
+            Console.ReadKey();
+        }
+
+        static double GetValidNumber(string message)
+        {
+            double number;
+            while (true)
+            {
+                Console.Write(message);
+                if (double.TryParse(Console.ReadLine(), out number) && number >= 0)
+                    return number;
+
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("Invalid input! Please enter a positive number.\n");
+                Console.ResetColor();
+            }
+        }
+    }
+}
