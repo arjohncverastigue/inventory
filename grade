@@ -1,0 +1,74 @@
+using System;
+using System.IO;
+using System.Linq;
+
+namespace StudentGradeSystem
+{
+    public class Program
+    {
+        static void Main()
+        {
+            Console.Write("Enter Student Number: ");
+            string studentNumber = Console.ReadLine();
+
+            string[] studentLines = File.ReadAllLines("students.txt");
+
+            // Find matching student record
+            var studentRecord = studentLines.FirstOrDefault(line => line.StartsWith(studentNumber + ","));
+
+            if (studentRecord != null)
+            {
+                string[] parts = studentRecord.Split(',');
+                string studentNo = parts[0];
+                string firstName = parts[1];
+                string lastName = parts[2];
+                string program = parts[3];
+
+                Console.WriteLine("\nStudent Found!");
+                Console.WriteLine("Name: " + firstName + " " + lastName);
+                Console.WriteLine("Program: " + program);
+
+                // Input grades
+                Console.Write("\nEnter Prelim Grade: ");
+                double prelim = Convert.ToDouble(Console.ReadLine());
+
+                Console.Write("Enter Midterm Grade: ");
+                double midterm = Convert.ToDouble(Console.ReadLine());
+
+                Console.Write("Enter Final Grade: ");
+                double final = Convert.ToDouble(Console.ReadLine());
+
+                // Compute average
+                double average = (prelim + midterm + final) / 3.0;
+
+                // Determine remark
+                string remark;
+                if (average >= 90)
+                    remark = "Excellent";
+                else if (average >= 80)
+                    remark = "Good";
+                else if (average >= 75)
+                    remark = "Passed";
+                else
+                    remark = "Failed";
+
+                // Display results
+                Console.WriteLine($"\nAverage: {average:F2}");
+                Console.WriteLine("Remark: " + remark);
+
+                // Append result to grades.txt
+                string gradeLine = $"{studentNo},{prelim},{midterm},{final},{average:F2},{remark}";
+                File.AppendAllText("grades.txt", gradeLine + Environment.NewLine);
+
+                Console.WriteLine("\nGrades successfully saved to 'grades.txt'");
+            }
+            else
+            {
+                Console.WriteLine("Student not found.");
+            }
+
+            Console.WriteLine("\nPress any key to exit...");
+            Console.ReadKey();
+        }
+    }
+}
