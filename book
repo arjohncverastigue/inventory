@@ -1,0 +1,100 @@
+using System;
+using System.IO;
+
+namespace LibraryBorrowingSystem
+{
+    class Program
+    {
+        static void Main()
+        {
+            string bookFile = "books.txt";
+            string borrowedFile = "borrowed_books.txt";
+
+            // Create a sample book file if not found
+            if (!File.Exists(bookFile))
+            {
+                File.WriteAllText(bookFile,
+                    "B001,The Hobbit,J.R.R. Tolkien,Available\n" +
+                    "B002,To Kill a Mockingbird,Harper Lee,Borrowed\n" +
+                    "B003,1984,George Orwell,Available\n");
+                Console.WriteLine($"Created sample {bookFile} file.\n");
+            }
+
+            Console.WriteLine("===== LIBRARY BOOK BORROWING SYSTEM =====\n");
+            Console.Write("Enter Book ID: ");
+            string bookID = Console.ReadLine().Trim();
+
+            string[] books = File.ReadAllLines(bookFile);
+            string record = null;
+            int recordIndex = -1;
+
+            // Search for the book manually
+            for (int i = 0; i < books.Length; i++)
+            {
+                if (books[i].StartsWith(bookID + ","))
+                {
+                    record = books[i];
+                    recordIndex = i;
+                    break;
+                }
+            }
+
+            if (record != null)
+            {
+                string[] parts = record.Split(',');
+                string id = parts[0];
+                string title = parts[1];
+                string author = parts[2];
+                string status = parts[3];
+
+                Console.WriteLine("\nBook Found!");
+                Console.WriteLine("Title: " + title);
+                Console.WriteLine("Author: " + author);
+                Console.WriteLine("Status: " + status);
+
+                if (status == "Available")
+                {
+                    Console.Write("\nEnter Borrower's Name: ");
+                    string borrower = Console.ReadLine().Trim();
+
+                    Console.Write("Enter Borrow Date (yyyy-mm-dd): ");
+                    DateTime borrowDate;
+                    while (!DateTime.TryParse(Console.ReadLine(), out borrowDate))
+                    {
+                        Console.Write("Invalid date! Please enter again (yyyy-mm-dd): ");
+                    }
+
+                    DateTime returnDate = borrowDate.AddDays(7);
+
+                    Console.WriteLine("\nBook successfully borrowed!");
+                    Console.WriteLine("Return Date: " + returnDate.ToString("yyyy-MM-dd"));
+
+                    // Update book status to Borrowed
+                    books[recordIndex] = $"{id},{title},{author},Borrowed";
+                    File.WriteAllLines(bookFile, books);
+
+                    // Save to borrowed_books.txt
+                    string borrowLine = $"{id},{title},{borrower},{borrowDate:yyyy-MM-dd},{returnDate:yyyy-MM-dd}";
+                    File.AppendAllText(borrowedFile, borrowLine + Environment.NewLine);
+
+                    Console.WriteLine("\nTransaction saved to 'borrowed_books.txt'");
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine("\nSorry, the book is currently borrowed.");
+                    Console.ResetColor();
+                }
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("\nBook not found.");
+                Console.ResetColor();
+            }
+
+            Console.WriteLine("\nPress any key to exit...");
+            Console.ReadKey();
+        }
+    }
+}
