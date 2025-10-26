@@ -1,0 +1,99 @@
+using System;
+using System.IO;
+
+namespace StoreInventorySystem
+{
+    class Program
+    {
+        static void Main()
+        {
+            string productFile = "products.txt";
+            string salesFile = "sales.txt";
+
+            // Create sample data if not existing
+            if (!File.Exists(productFile))
+            {
+                File.WriteAllText(productFile,
+                    "P001,Shampoo,120.50,30\n" +
+                    "P002,Soap,35.00,50\n" +
+                    "P003,Toothpaste,75.25,20\n");
+                Console.WriteLine($"Created sample {productFile} file.\n");
+            }
+
+            Console.WriteLine("=== STORE INVENTORY MANAGEMENT SYSTEM ===\n");
+
+            // 🔁 LOOP 5 TIMES
+            for (int count = 1; count <= 5; count++)
+            {
+                Console.WriteLine($"Transaction #{count}");
+                Console.Write("Enter Product ID: ");
+                string productID = Console.ReadLine().Trim();
+
+                string[] products = File.ReadAllLines(productFile);
+
+                string record = null;
+                int recordIndex = -1;
+
+                for (int i = 0; i < products.Length; i++)
+                {
+                    if (products[i].StartsWith(productID + ","))
+                    {
+                        record = products[i];
+                        recordIndex = i;
+                        break;
+                    }
+                }
+
+                if (record == null)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Product not found!\n");
+                    Console.ResetColor();
+                    continue; // Go to next loop iteration
+                }
+
+                string[] parts = record.Split(',');
+                string id = parts[0];
+                string name = parts[1];
+                double price = Convert.ToDouble(parts[2]);
+                int quantity = Convert.ToInt32(parts[3]);
+
+                Console.WriteLine("Name: " + name);
+                Console.WriteLine("Price: " + price.ToString("F2"));
+                Console.WriteLine("Available Quantity: " + quantity);
+
+                Console.Write("\nEnter Quantity Sold: ");
+                int soldQty;
+                while (!int.TryParse(Console.ReadLine(), out soldQty) || soldQty < 0)
+                {
+                    Console.Write("Invalid input! Please enter a positive number: ");
+                }
+
+                if (soldQty > quantity)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Not enough stock available.\n");
+                    Console.ResetColor();
+                    continue;
+                }
+
+                double totalAmount = price * soldQty;
+                int remainingStock = quantity - soldQty;
+
+                products[recordIndex] = $"{id},{name},{price:F2},{remainingStock}";
+                File.WriteAllLines(productFile, products);
+
+                string saleLine = $"{id},{name},{soldQty},{totalAmount:F2},{DateTime.Now:yyyy-MM-dd}";
+                File.AppendAllText(salesFile, saleLine + Environment.NewLine);
+
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"Transaction saved! Total: {totalAmount:F2}\n");
+                Console.ResetColor();
+            }
+
+            Console.WriteLine("You have completed 5 transactions!");
+            Console.WriteLine("Press any key to exit...");
+            Console.ReadKey();
+        }
+    }
+}
